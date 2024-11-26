@@ -16,7 +16,7 @@ $searchKeyword = htmlspecialchars($searchKeyword);
 $stmt = $pdo->prepare("
     SELECT PageName, PageURL 
     FROM Pages 
-    WHERE PageName LIKE :keyword OR PageContent LIKE :keyword
+    WHERE PageName LIKE :keyword OR PageContent LIKE :keyword OR keywords LIKE :keyword
 ");
 $stmt->execute(['keyword' => '%' . $searchKeyword . '%']);
 $results = $stmt->fetchAll(PDO::FETCH_ASSOC);

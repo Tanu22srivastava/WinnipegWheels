@@ -9,8 +9,13 @@ if (!isset($_SESSION['role']) || !isset($_SESSION['username'])) {
 }
 
 // Default sort by Manufacturer if nothing is selected
-$orderBy = 'Manufacturer'; 
+$orderBy = 'Manufacturer';
 $orderDir = 'ASC'; // Default ascending order
+
+// Pagination variables
+$limit = 8; // Number of vehicles per page
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
 
 // Check if sorting criteria is provided
 if (isset($_POST['sort_by'])) {
@@ -19,9 +24,17 @@ if (isset($_POST['sort_by'])) {
 }
 
 try {
-    // Fetch all vehicles from the database with sorting
-    $sql = "SELECT * FROM Vehicles ORDER BY $orderBy $orderDir";
-    $stmt = $pdo->query($sql);
+    // Fetch total number of vehicles
+    $totalQuery = "SELECT COUNT(*) as total FROM Vehicles";
+    $totalStmt = $pdo->query($totalQuery);
+    $totalVehicles = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
+
+    // Fetch vehicles for the current page with sorting and pagination
+    $sql = "SELECT * FROM Vehicles ORDER BY $orderBy $orderDir LIMIT :limit OFFSET :offset";
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
 
     // Fetch as associative array
     $vehicles = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -30,8 +43,11 @@ try {
     $vehicles = []; // Set an empty array if there's an error
 }
 
+// Calculate total pages
+$totalPages = ceil($totalVehicles / $limit);
+
 // Check user role
-$isUser=($_SESSION['role'] === 'user');
+$isUser = ($_SESSION['role'] === 'user');
 $isAdmin = ($_SESSION['role'] === 'admin');
 ?>
 
@@ -41,10 +57,10 @@ $isAdmin = ($_SESSION['role'] === 'admin');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Vehicles</title>
-    <link rel="stylesheet" href="style.css">
+    
     <style>
-        /* General Styles */
-        body {
+         /* General Styles */
+         body {
             font-family: 'Arial', sans-serif;
             background-color: #f4f4f4;
             margin: 0;
@@ -63,7 +79,6 @@ $isAdmin = ($_SESSION['role'] === 'admin');
         header h1 {
             margin: 0;
             font-size: 36px;
-            color: white;
         }
 
         /* Navigation Bar */
@@ -97,6 +112,7 @@ $isAdmin = ($_SESSION['role'] === 'admin');
         nav ul li a:hover {
             text-decoration: underline;
         }
+
         /* Search Form in the Navbar */
         .search-container {
             display: flex;
@@ -196,6 +212,31 @@ $isAdmin = ($_SESSION['role'] === 'admin');
             color: #4CAF50;
             text-decoration: none;
         }
+        /* Add styles for pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination a {
+            padding: 10px 15px;
+            margin: 0 5px;
+            text-decoration: none;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+        }
+
+        .pagination a:hover {
+            background-color: #45a049;
+        }
+
+        .pagination a.disabled {
+            background-color: #ccc;
+            pointer-events: none;
+            color: #777;
+        }
     </style>
 </head>
 <body>
@@ -210,17 +251,19 @@ $isAdmin = ($_SESSION['role'] === 'admin');
         <ul>
             <li><a href="read.php">View All Vehicles</a></li>
             <li><a href="comments.php">Comments</a></li>
-
-            <?php if ($isUser): // Only show update and delete for admins ?>
-                <li><a href="about_us.php">About Us</a></li>
-                <li><a href="contact_us.php">Contact Us</a></li>
-            <?php endif; ?>
-            
+            <li><a href="about_us.php">About Us</a></li>
+            <li><a href="contact_us.php">Contact Us</a></li>
             <li><a href="logout.php">Logout</a></li>
         </ul>
         <!-- Search Form on the Right -->
-        
+        <div class="search-container">
+            <form action="search.php" method="GET">
+                <input type="text" name="search" placeholder="Search for pages..." required>
+                <button type="submit">Search</button>
+            </form>
+        </div>
     </nav>
+
     <!-- Right Corner Section for Sort and Search -->
     <div class="right-corner">
         <!-- Sorting Form -->
@@ -242,8 +285,8 @@ $isAdmin = ($_SESSION['role'] === 'admin');
         </form>
     </div>
 
-    <!-- Main Content with Vehicles Table -->
     <main>
+        <!-- Vehicles Table -->
         <table>
             <thead>
                 <tr>
@@ -276,19 +319,38 @@ $isAdmin = ($_SESSION['role'] === 'admin');
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="7">No vehicles found.</td>
+                    <td colspan="6">No vehicles found.</td>
                 </tr>
             <?php endif; ?>
             </tbody>
         </table>
+
+        <!-- Pagination Links -->
+        <div class="pagination">
+            <?php if ($page > 1): ?>
+                <a href="?page=<?= $page - 1; ?>">Previous</a>
+            <?php else: ?>
+                <a class="disabled">Previous</a>
+            <?php endif; ?>
+
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <a href="?page=<?= $i; ?>" class="<?= ($i == $page) ? 'disabled' : ''; ?>">
+                    <?= $i; ?>
+                </a>
+            <?php endfor; ?>
+
+            <?php if ($page < $totalPages): ?>
+                <a href="?page=<?= $page + 1; ?>">Next</a>
+            <?php else: ?>
+                <a class="disabled">Next</a>
+            <?php endif; ?>
+        </div>
+
         <!-- Go to Dashboard button -->
         <a href="<?= $isAdmin ? 'admin.php' : 'index.php'; ?>">Back to Dashboard</a>
     </main>
 
-    <!-- Footer -->
-    <footer>
-        &copy; 2024 Winnipeg Wheels | All Rights Reserved
-    </footer>
+    <!-- Add footer here -->
 
 </body>
 </html>

@@ -32,40 +32,90 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <style>
         
 
+        /* General Styles */
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            color: #333;
         }
 
-        .navbar {
-            background-color: #333;
-            padding: 15px;
+        /* Header Styling */
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 20px;
             text-align: center;
         }
 
-        .navbar ul {
-            list-style: none;
+        header h1 {
             margin: 0;
+            font-size: 36px;
+        }
+
+        /* Navigation Bar */
+        nav {
+            background-color: #333;
+            padding: 10px 20px;
+            text-align: left;
+            display: flex;
+            justify-content: space-between; /* Distributes items in navbar */
+            align-items: center;
+        }
+
+        nav ul {
+            list-style: none;
             padding: 0;
+            margin: 0;
+            display: flex;
         }
 
-        .navbar ul li {
+        nav ul li {
             display: inline;
-            margin: 0 20px;
+            margin-right: 20px;
         }
 
-        .navbar ul li a {
+        nav ul li a {
             color: white;
             text-decoration: none;
             font-size: 18px;
         }
 
-        .navbar ul li a:hover {
-            color: #f39c12;
+        nav ul li a:hover {
+            text-decoration: underline;
         }
 
-        header h1 {
+        /* Search Form in the Navbar */
+        .search-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .search-container input[type="text"] {
+            padding: 8px;
+            width: 250px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .search-container button {
+            padding: 8px 16px;
+            margin-left: 10px;
+            font-size: 14px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .search-container button:hover {
+            background-color: #45a049;
+        }
+
+        div h1 {
             text-align: center;
             color: #333;
             margin-bottom: 20px;
@@ -140,19 +190,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body>
 
-    <!-- Navigation Bar -->
-    <nav class="navbar">
+    <!-- Header -->
+   <header>
+        <h1>Winnipeg Wheels</h1>
+    </header>
+
+    <!-- Navigation Bar with Search in the Right Corner -->
+    <nav>
         <ul>
-            <li><a href="admin.php">Dashboard</a></li>
-            <li><a href="add_vehicle.php">Add Vehicle</a></li>
-            <li><a href="read.php">View Vehicles</a></li>
+            <li><a href="read.php">View All Vehicles</a></li>
+            <li><a href="comments.php">Comments</a></li>
+            <li><a href="about_us.php">About Us</a></li>
+            <li><a href="contact_us.php">Contact Us</a></li>
             <li><a href="logout.php">Logout</a></li>
         </ul>
+        <!-- Search Form on the Right -->
+        <div class="search-container">
+            <form action="search.php" method="GET">
+                <input type="text" name="search" placeholder="Search for pages..." required>
+                <button type="submit">Search</button>
+            </form>
+        </div>
     </nav>
 
-    <header>
-        <h1>Add Vehicle</h1>
-    </header>
+    <div>
+        <h1>Add vehicles</h1>
+    </div>
 
     <main>
         <form method="POST" class="vehicle-form">

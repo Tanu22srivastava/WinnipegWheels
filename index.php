@@ -143,6 +143,7 @@
             <li><a href="comments.php">Comments</a></li>
             <li><a href="about_us.php">About Us</a></li>
             <li><a href="contact_us.php">Contact Us</a></li>
+            <li><a href="categorize_vehicle.php">Categorize Vehicle</a></li>
             <li><a href="logout.php">Logout</a></li>
         </ul>
         <!-- Search Form on the Right -->
