@@ -2,25 +2,64 @@
 session_start();
 require 'db.php';
 
-// // Check if user is admin
-// if ($_SESSION['Role_name'] !== 'Admin') {
+// // Check if the user is logged in and has the correct role
+// if (!isset($_SESSION['Role_name']) || $_SESSION['Role_name'] !== 'Admin') {
 //     die('You do not have permission to add a vehicle.');
 // }
 
+$errorMessages = [];
+$successMessage = "";
+
 // Process the form submission for adding a vehicle
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $manufacturer = $_POST['manufacturer'];
-    $model = $_POST['model'];
-    $year = $_POST['year'];
-    $price = $_POST['price'];
-    $specifications = $_POST['specifications'];
+    // Sanitize and validate inputs
+    $manufacturer = filter_input(INPUT_POST, 'manufacturer', FILTER_SANITIZE_STRING);
+    $model = filter_input(INPUT_POST, 'model', FILTER_SANITIZE_STRING);
+    $year = filter_input(INPUT_POST, 'year', FILTER_SANITIZE_NUMBER_INT);
+    $price = filter_input(INPUT_POST, 'price', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+    $specifications = filter_input(INPUT_POST, 'specifications', FILTER_SANITIZE_STRING);
 
-    $stmt = $pdo->prepare("INSERT INTO Vehicles (Manufacturer, Model, Year, Price, Specifications) VALUES (:manufacturer, :model, :year, :price, :specifications)");
-    $stmt->execute(['manufacturer' => $manufacturer, 'model' => $model, 'year' => $year, 'price' => $price, 'specifications' => $specifications]);
+    // Validate inputs
+    if (empty($manufacturer) || strlen($manufacturer) > 50) {
+        $errorMessages[] = "Manufacturer name must not be empty or exceed 50 characters.";
+    }
 
-    echo '<div class="success-message">Vehicle added successfully!</div>';
+    if (empty($model) || strlen($model) > 50) {
+        $errorMessages[] = "Model name must not be empty or exceed 50 characters.";
+    }
+
+    if (empty($year) || !is_numeric($year) || $year < 1900 || $year > intval(date('Y'))) {
+        $errorMessages[] = "Year must be a valid number between 1900 and the current year.";
+    }
+
+    if (empty($price) || !is_numeric($price) || $price <= 0) {
+        $errorMessages[] = "Price must be a positive number.";
+    }
+
+    if (empty($specifications) || strlen($specifications) > 500) {
+        $errorMessages[] = "Specifications must not be empty or exceed 500 characters.";
+    }
+
+    // If no validation errors, proceed to insert into the database
+    if (empty($errorMessages)) {
+        try {
+            $stmt = $pdo->prepare("INSERT INTO Vehicles (Manufacturer, Model, Year, Price, Specifications) 
+                                   VALUES (:manufacturer, :model, :year, :price, :specifications)");
+            $stmt->execute([
+                'manufacturer' => $manufacturer,
+                'model' => $model,
+                'year' => $year,
+                'price' => $price,
+                'specifications' => $specifications
+            ]);
+            $successMessage = "Vehicle added successfully!";
+        } catch (PDOException $e) {
+            $errorMessages[] = "Error adding vehicle: " . $e->getMessage();
+        }
+    }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -186,16 +225,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             font-size: 16px;
             margin-top: 20px;
         }
+        .error-messages {
+            color: #d9534f;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .success-message {
+            color: #28a745;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
-   <header>
+    <header>
         <h1>Winnipeg Wheels</h1>
     </header>
-
-    <!-- Navigation Bar with Search in the Right Corner -->
     <nav>
         <ul>
             <li><a href="read.php">View All Vehicles</a></li>
@@ -204,7 +251,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <li><a href="contact_us.php">Contact Us</a></li>
             <li><a href="logout.php">Logout</a></li>
         </ul>
-        <!-- Search Form on the Right -->
         <div class="search-container">
             <form action="search.php" method="GET">
                 <input type="text" name="search" placeholder="Search for pages..." required>
@@ -214,10 +260,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </nav>
 
     <div>
-        <h1>Add vehicles</h1>
+        <h1>Add Vehicles</h1>
     </div>
 
     <main>
+        <!-- Display error messages -->
+        <?php if (!empty($errorMessages)): ?>
+            <div class="error-messages">
+                <ul>
+                    <?php foreach ($errorMessages as $error): ?>
+                        <li><?php echo htmlspecialchars($error); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
+
+        <!-- Display success message -->
+        <?php if (!empty($successMessage)): ?>
+            <div class="success-message">
+                <?php echo htmlspecialchars($successMessage); ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Form for adding vehicles -->
         <form method="POST" class="vehicle-form">
             <label for="manufacturer">Manufacturer:</label>
             <input type="text" name="manufacturer" id="manufacturer" required>
@@ -229,7 +294,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <input type="number" name="year" id="year" required>
             
             <label for="price">Price:</label>
-            <input type="number" name="price" id="price" required>
+            <input type="number" step="0.01" name="price" id="price" required>
 
             <label for="specifications">Specifications:</label>
             <input type="text" name="specifications" id="specifications" required>

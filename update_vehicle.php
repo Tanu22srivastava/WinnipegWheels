@@ -4,14 +4,13 @@ require_once 'config.php';
 
 session_start();
 
-// Check if user is logged in and is admin
-// if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-//     header("HTTP/1.1 403 Forbidden");
-//     die("Access denied. You do not have permission to access this page.");
-// }
-
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
-    $vehicleID = $_GET['id'];
+    // Sanitize and validate the vehicle ID
+    $vehicleID = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+
+    if (!$vehicleID) {
+        die("Invalid vehicle ID.");
+    }
 
     // Fetch vehicle details
     $sql = "SELECT * FROM Vehicles WHERE VehicleID = :id";
@@ -24,15 +23,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle form submission
-    $vehicleID = $_POST['VehicleID'];
-    $manufacturer = $_POST['Manufacturer'];
-    $model = $_POST['Model'];
-    $year = $_POST['Year'];
-    $price = $_POST['Price'];
-    $specifications = $_POST['Specifications'];
+    $vehicleID = filter_input(INPUT_POST, 'VehicleID', FILTER_VALIDATE_INT);
+    $manufacturer = trim(filter_input(INPUT_POST, 'Manufacturer', FILTER_SANITIZE_STRING));
+    $model = trim(filter_input(INPUT_POST, 'Model', FILTER_SANITIZE_STRING));
+    $year = filter_input(INPUT_POST, 'Year', FILTER_VALIDATE_INT);
+    $price = filter_input(INPUT_POST, 'Price', FILTER_VALIDATE_FLOAT);
+    $specifications = trim(filter_input(INPUT_POST, 'Specifications', FILTER_SANITIZE_STRING));
+
+    // Validate required fields
+    $errors = [];
+    if (!$vehicleID) {
+        $errors[] = "Vehicle ID is invalid.";
+    }
+    if (empty($manufacturer)) {
+        $errors[] = "Manufacturer is required.";
+    }
+    if (empty($model)) {
+        $errors[] = "Model is required.";
+    }
+    if (!$year || $year < 1886 || $year > date("Y")) { // Validate year (earliest cars were invented in 1886)
+        $errors[] = "Year must be valid and between 1886 and " . date("Y") . ".";
+    }
+    if (!$price || $price <= 0) {
+        $errors[] = "Price must be a positive number.";
+    }
+    if (empty($specifications)) {
+        $errors[] = "Specifications are required.";
+    }
+
+    if (!empty($errors)) {
+        // Display errors and stop execution
+        foreach ($errors as $error) {
+            echo "<div style='color: red;'>$error</div>";
+        }
+        exit;
+    }
 
     // Update vehicle in the database
-    $sql = "UPDATE Vehicles SET Manufacturer = :manufacturer, Model = :model, Year = :year, Price = :price, Specifications = :specifications WHERE VehicleID = :id";
+    $sql = "UPDATE Vehicles 
+            SET Manufacturer = :manufacturer, Model = :model, Year = :year, Price = :price, Specifications = :specifications 
+            WHERE VehicleID = :id";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([
         ':manufacturer' => $manufacturer,
@@ -43,10 +73,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
         ':id' => $vehicleID
     ]);
 
+    // Success message
+    $_SESSION['success_message'] = "Vehicle updated successfully!";
     header("Location: read.php");
     exit;
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -212,5 +245,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
             <a href="read.php">Back to Vehicle List</a>
         </div>
     </div>
+    <script>
+    document.querySelector('form').addEventListener('submit', function (e) {
+        const year = document.getElementById('Year').value;
+        const price = document.getElementById('Price').value;
+
+        if (year < 1886 || year > new Date().getFullYear()) {
+            alert("Year must be between 1886 and " + new Date().getFullYear() + ".");
+            e.preventDefault();
+        }
+        if (price <= 0) {
+            alert("Price must be a positive number.");
+            e.preventDefault();
+        }
+    });
+</script>
+
 </body>
 </html>
