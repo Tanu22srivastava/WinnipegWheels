@@ -12,7 +12,7 @@ $successMessage = "";
 
 // Process the form submission for adding a vehicle
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Sanitize and validate inputs
+    // Sanitize and validate inputs (as in your original code)
     $manufacturer = filter_input(INPUT_POST, 'manufacturer', FILTER_SANITIZE_STRING);
     $model = filter_input(INPUT_POST, 'model', FILTER_SANITIZE_STRING);
     $year = filter_input(INPUT_POST, 'year', FILTER_SANITIZE_NUMBER_INT);
@@ -40,17 +40,43 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errorMessages[] = "Specifications must not be empty or exceed 500 characters.";
     }
 
+    $imagePath = null;
+    if (!empty($_FILES['image']['name'])) {
+        // Handle image upload and resizing
+        $targetDir = "upload/images/";
+        $fileName = basename($_FILES['image']['name']);
+        $targetFilePath = $targetDir . uniqid() . "_" . $fileName;
+
+        $imageFileType = strtolower(pathinfo($targetFilePath, PATHINFO_EXTENSION));
+        $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
+
+        if (in_array($imageFileType, $allowedTypes)) {
+            if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFilePath)) {
+                // Resize the image
+                $resizedFilePath = $targetDir . "resized_" . uniqid() . ".jpg";
+                resizeImage($targetFilePath, $resizedFilePath, 800, 600);
+                $imagePath = $resizedFilePath;
+                unlink($targetFilePath); // Remove original image
+            } else {
+                $errorMessages[] = "Failed to upload the image.";
+            }
+        } else {
+            $errorMessages[] = "Invalid image format. Only JPG, JPEG, PNG, and GIF are allowed.";
+        }
+    }
+
     // If no validation errors, proceed to insert into the database
     if (empty($errorMessages)) {
         try {
-            $stmt = $pdo->prepare("INSERT INTO Vehicles (Manufacturer, Model, Year, Price, Specifications) 
-                                   VALUES (:manufacturer, :model, :year, :price, :specifications)");
+            $stmt = $pdo->prepare("INSERT INTO Vehicles (Manufacturer, Model, Year, Price, Specifications, Image) 
+                                   VALUES (:manufacturer, :model, :year, :price, :specifications, :image)");
             $stmt->execute([
                 'manufacturer' => $manufacturer,
                 'model' => $model,
                 'year' => $year,
                 'price' => $price,
-                'specifications' => $specifications
+                'specifications' => $specifications,
+                'image' => $imagePath
             ]);
             $successMessage = "Vehicle added successfully!";
         } catch (PDOException $e) {
@@ -58,6 +84,64 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 }
+
+/**
+ * Resize an image to specified dimensions.
+ *
+ * @param string $sourcePath The path to the original image.
+ * @param string $destPath The path to save the resized image.
+ * @param int $width The target width.
+ * @param int $height The target height.
+ */
+function resizeImage($sourcePath, $destPath, $width, $height) {
+    list($srcWidth, $srcHeight, $type) = getimagesize($sourcePath);
+
+    // Create a new blank image
+    $destImage = imagecreatetruecolor($width, $height);
+
+    switch ($type) {
+        case IMAGETYPE_JPEG:
+            $srcImage = imagecreatefromjpeg($sourcePath);
+            break;
+        case IMAGETYPE_PNG:
+            $srcImage = imagecreatefrompng($sourcePath);
+            imagealphablending($destImage, false);
+            imagesavealpha($destImage, true);
+            break;
+        case IMAGETYPE_GIF:
+            $srcImage = imagecreatefromgif($sourcePath);
+            break;
+        default:
+            return false;
+    }
+
+    // Resize the image
+    imagecopyresampled(
+        $destImage, $srcImage,
+        0, 0, 0, 0,
+        $width, $height,
+        $srcWidth, $srcHeight
+    );
+
+    // Save the resized image
+    switch ($type) {
+        case IMAGETYPE_JPEG:
+            imagejpeg($destImage, $destPath, 85);
+            break;
+        case IMAGETYPE_PNG:
+            imagepng($destImage, $destPath);
+            break;
+        case IMAGETYPE_GIF:
+            imagegif($destImage, $destPath);
+            break;
+    }
+
+    imagedestroy($srcImage);
+    imagedestroy($destImage);
+
+    return true;
+}
+
 ?>
 
 
@@ -283,7 +367,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <?php endif; ?>
 
         <!-- Form for adding vehicles -->
-        <form method="POST" class="vehicle-form">
+        <form method="POST" class="vehicle-form" enctype="multipart/form-data">
             <label for="manufacturer">Manufacturer:</label>
             <input type="text" name="manufacturer" id="manufacturer" required>
             
@@ -298,6 +382,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             <label for="specifications">Specifications:</label>
             <input type="text" name="specifications" id="specifications" required>
+
+            <label for="image">Vehicle Image (optional):</label>
+            <input type="file" name="image" id="image" accept="image/*">
+
             
             <button type="submit" class="submit-btn">Add Vehicle</button>
         </form>

@@ -4,24 +4,33 @@ require_once 'config.php'; // Include database connection
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
-    $password = $_POST['password']; // Do not hash the password
+    $password = $_POST['password']; // Do not hash the password here
 
-    // Prepare the SQL statement
-    $stmt = $pdo->prepare("SELECT * FROM Users WHERE User_name = :username AND Password = :password");
-    $stmt->execute(['username' => $username, 'password' => $password]);
+    // Prepare the SQL statement to retrieve the user record by username
+    $stmt = $pdo->prepare("SELECT * FROM Users WHERE User_name = :username");
+    $stmt->execute(['username' => $username]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user) {
-        $_SESSION['username'] = $user['User_name'];
-        $_SESSION['role'] = $user['Role'];
+        // Verify the entered password against the hashed password in the database
+        if (password_verify($password, $user['Password'])) {
+            // Password is correct, create session
+            $_SESSION['username'] = $user['User_name'];
+            $_SESSION['role'] = $user['Role'];
 
-        if ($user['Role'] === 'admin') {
-            header("Location: admin.php");
-        } elseif ($user['Role'] === 'user') {
-            header("Location: index.php");
+            // Redirect based on user role
+            if ($user['Role'] === 'admin') {
+                header("Location: admin.php");
+            } elseif ($user['Role'] === 'user') {
+                header("Location: index.php");
+            }
+        } else {
+            // Invalid password
+            $error = "Invalid password!";
         }
     } else {
-        $error = "Invalid login credentials!";
+        // User does not exist
+        $error = "Invalid username!";
     }
 }
 ?>
@@ -42,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             align-items: center;
             height: 100vh;
         }
-
+        
         form {
             background-color: #ffffff;
             border: 1px solid #e0e0e0;
@@ -96,9 +105,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             color: red;
             font-size: 14px;
         }
+        .footer {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .footer a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
+    <div class="container">
     <form action="" method="POST">
         <h2>Login</h2>
         <?php if (isset($error)): ?>
@@ -110,5 +133,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <input type="password" name="password" id="password" required>
         <button type="submit">Login</button>
     </form>
+    <div class="footer">
+            <p>Doesn't have an account? <a href="register.php">Register here</a></p>
+        </div>
+    </div>
+    
 </body>
 </html>

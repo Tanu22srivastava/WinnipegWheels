@@ -16,6 +16,13 @@ if (!$vehicle) {
     die('Invalid Vehicle ID.');
 }
 
+
+// Validate the VehicleID and fetch details, including image path
+
+
+$imagePath = !empty($vehicle['Image']) ? $vehicle['Image'] : null; // Assuming 'ImagePath' column exists
+
+
 // CAPTCHA generation logic
 if (!isset($_SESSION['captcha_answer'])) {
     // Generate random arithmetic question (e.g., 3 + 7)
@@ -263,6 +270,16 @@ if (isset($_GET['captcha_image']) && $_GET['captcha_image'] == 'true') {
     </nav>
 
     <div class="container">
+        <!-- Display the vehicle image if available -->
+    <?php if ($imagePath): ?>
+        <div class="vehicle-image">
+            <img src="<?= htmlspecialchars($imagePath) ?>" alt="Vehicle Image" style="max-width: 100%; height: auto; margin-bottom: 20px;">
+        </div>
+    <?php else: ?>
+        <p>No image available for this vehicle.</p>
+    <?php endif; ?>
+
+
         <h2>Comments for Vehicle: <?= htmlspecialchars($vehicle['Manufacturer'] . ' ' . $vehicle['Model']) ?></h2>
 
         <?php if (isset($error)): ?>

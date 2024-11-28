@@ -73,6 +73,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
         ':id' => $vehicleID
     ]);
 
+    if (isset($_FILES['Image']) && $_FILES['Image']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = 'upload/images/';
+        $fileName = basename($_FILES['Image']['name']);
+        $fileTmpPath = $_FILES['Image']['tmp_name'];
+        $filePath = $uploadDir . time() . '_' . $fileName; // Unique file name
+    
+        // Move the uploaded file
+        if (move_uploaded_file($fileTmpPath, $filePath)) {
+            // Update the database with the file name
+            $sql = "UPDATE Vehicles SET Image = :image WHERE VehicleID = :id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([':image' => $filePath, ':id' => $vehicleID]);
+        }
+    }
+
+    if (isset($_POST['RemoveImage']) && $_POST['RemoveImage'] == '1') {
+        // Get current image path
+        $sql = "SELECT Image FROM Vehicles WHERE VehicleID = :id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':id' => $vehicleID]);
+        $image = $stmt->fetchColumn();
+    
+        if ($image && file_exists($image)) {
+            unlink($image); // Delete image file
+        }
+    
+        // Update the database to nullify the image
+        $sql = "UPDATE Vehicles SET Image = NULL WHERE VehicleID = :id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':id' => $vehicleID]);
+    }
+    
+    
+
     // Success message
     $_SESSION['success_message'] = "Vehicle updated successfully!";
     header("Location: read.php");
@@ -209,7 +243,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
 
     <div class="container">
         <h1>Update Vehicle</h1>
-        <form action="update_vehicle.php" method="POST" class="form-container">
+        <form action="update_vehicle.php" method="POST" class="form-container" enctype="multipart/form-data">
             <input type="hidden" name="VehicleID" value="<?= htmlspecialchars($vehicle['VehicleID']) ?>">
 
             <div class="form-group">
@@ -236,6 +270,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id'])) {
                 <label for="Specifications">Specifications:</label>
                 <textarea name="Specifications" id="Specifications" required><?= htmlspecialchars($vehicle['Specifications']) ?></textarea>
             </div>
+            <div class="form-group">
+                <label for="Image">Vehicle Image (optional):</label>
+                <input type="file" name="Image" id="Image" accept="image/*">
+            </div>
+
+            <div class="form-group">
+    <label for="RemoveImage">Remove Current Image:</label>
+    <input type="checkbox" name="RemoveImage" id="RemoveImage" value="1">
+</div>
+
+
 
             <div class="form-actions">
                 <button type="submit" class="submit-btn">Update Vehicle</button>
