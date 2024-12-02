@@ -6,9 +6,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Get username and password from POST request
     $username = $_POST['username'];
     $password = $_POST['password'];
+    $email = $_POST['email'];
+    $role = $_POST['role'];
 
     // Validate user input
-    if (empty($username) || empty($password)) {
+    if (empty($username) || empty($password) || empty($email) || empty($role)) {
         echo "Username and password are required!";
         exit;
     }
@@ -25,8 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Insert the new user into the database
-    $stmt = $pdo->prepare("INSERT INTO Users (User_name, Password) VALUES (:username, :hashedPassword)");
-    $stmt->execute(['username' => $username, 'hashedPassword' => $hashedPassword]);
+    $stmt = $pdo->prepare("INSERT INTO Users (User_name, Password, Email, Role) VALUES (:username, :hashedPassword,:email,:role)");
+    $stmt->execute(['username' => $username, 'hashedPassword' => $hashedPassword,'email'=> $email ,'role'=> $role]);
 
     // Redirect to the login page after successful registration
     header("Location: login.php");
@@ -43,17 +45,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f7fc;
-            margin: 0;
-            padding: 0;
+            background-image: url('background1.jpg'); /* Replace with your image path */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            margin: 0;
         }
 
         .container {
-            background-color: #ffffff;
+            background-color: #00008B;
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -63,19 +67,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         h2 {
             text-align: center;
-            color: #333333;
+            color: white;
             margin-bottom: 20px;
         }
 
         label {
             font-size: 14px;
-            color: #555555;
+            color: white;
             margin-bottom: 5px;
             display: block;
         }
 
         input[type="text"],
-        input[type="password"] {
+        input[type="password"],
+        input[type="email"],
+        input[type="rolee"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #cccccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        #role{
+            background-color: white;
+            color: black;
             width: 100%;
             padding: 12px;
             margin-bottom: 20px;
@@ -86,8 +103,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         button {
-            background-color: #4CAF50;
-            color: white;
+            background-color: #00FFFF;
+            font-weight: bold;
+            color: black;
             border: none;
             padding: 12px;
             width: 100%;
@@ -98,17 +116,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         button:hover {
-            background-color: #45a049;
+            background-color: #0047AB;
+            color: white;
         }
 
         .footer {
             text-align: center;
             margin-top: 15px;
+            color: red;
         }
 
         .footer a {
-            color: #4CAF50;
+            color: white;
             text-decoration: none;
+            font-size: bold;
         }
 
         .footer a:hover {
@@ -134,6 +155,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required><br>
+
+            <label for="email">Email:</label>
+            <input type="email" id="emal" name="email" required><br>
+
+            <label for="Rolee">Role:</label>
+            <select id="role" name="role" required>
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+            </select><br>
+
 
             <button type="submit">Register</button>
         </form>

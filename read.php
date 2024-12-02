@@ -17,6 +17,9 @@ $limit = 8; // Number of vehicles per page
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $limit;
 
+// Search functionality variables
+$searchTerm = isset($_GET['search']) ? trim($_GET['search']) : '';
+
 // Check if sorting criteria is provided
 if (isset($_POST['sort_by'])) {
     $orderBy = $_POST['sort_by'];
@@ -24,14 +27,24 @@ if (isset($_POST['sort_by'])) {
 }
 
 try {
-    // Fetch total number of vehicles
-    $totalQuery = "SELECT COUNT(*) as total FROM Vehicles";
-    $totalStmt = $pdo->query($totalQuery);
+    // Prepare the query for fetching vehicles with optional search
+    $searchCondition = $searchTerm ? "WHERE Manufacturer LIKE :search OR Model LIKE :search" : '';
+    $totalQuery = "SELECT COUNT(*) as total FROM Vehicles $searchCondition";
+    $totalStmt = $pdo->prepare($totalQuery);
+
+    if ($searchTerm) {
+        $totalStmt->bindValue(':search', "%$searchTerm%", PDO::PARAM_STR);
+    }
+    $totalStmt->execute();
     $totalVehicles = $totalStmt->fetch(PDO::FETCH_ASSOC)['total'];
 
     // Fetch vehicles for the current page with sorting and pagination
-    $sql = "SELECT * FROM Vehicles ORDER BY $orderBy $orderDir LIMIT :limit OFFSET :offset";
+    $sql = "SELECT * FROM Vehicles $searchCondition ORDER BY $orderBy $orderDir LIMIT :limit OFFSET :offset";
     $stmt = $pdo->prepare($sql);
+
+    if ($searchTerm) {
+        $stmt->bindValue(':search', "%$searchTerm%", PDO::PARAM_STR);
+    }
     $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
     $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
@@ -57,7 +70,6 @@ $isAdmin = ($_SESSION['role'] === 'admin');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Vehicles</title>
-    
     <style>
          /* General Styles */
          body {
@@ -246,7 +258,7 @@ $isAdmin = ($_SESSION['role'] === 'admin');
         <h1>Winnipeg Wheels</h1>
     </header>
 
-    <!-- Navigation Bar with Search in the Right Corner -->
+    <!-- Navigation Bar with Search -->
     <nav>
         <ul>
             <li><a href="read.php">View All Vehicles</a></li>
@@ -257,33 +269,12 @@ $isAdmin = ($_SESSION['role'] === 'admin');
         </ul>
         <!-- Search Form on the Right -->
         <div class="search-container">
-            <form action="search.php" method="GET">
-                <input type="text" name="search" placeholder="Search for pages..." required>
+            <form action="read.php" method="GET">
+                <input type="text" name="search" placeholder="Search by Manufacturer or Model..." value="<?= htmlspecialchars($searchTerm); ?>">
                 <button type="submit">Search</button>
             </form>
         </div>
     </nav>
-
-    <!-- Right Corner Section for Sort and Search -->
-    <div class="right-corner">
-        <!-- Sorting Form -->
-        <form method="post" action="">
-            <label for="sort_by">Sort by:</label>
-            <select name="sort_by" id="sort_by">
-                <option value="Manufacturer" <?= ($orderBy == 'Manufacturer') ? 'selected' : ''; ?>>Manufacturer</option>
-                <option value="Year" <?= ($orderBy == 'Year') ? 'selected' : ''; ?>>Year</option>
-                <option value="Price" <?= ($orderBy == 'Price') ? 'selected' : ''; ?>>Price</option>
-            </select>
-
-            <label for="sort_dir">Order:</label>
-            <select name="sort_dir" id="sort_dir">
-                <option value="asc" <?= ($orderDir == 'ASC') ? 'selected' : ''; ?>>Ascending</option>
-                <option value="desc" <?= ($orderDir == 'DESC') ? 'selected' : ''; ?>>Descending</option>
-            </select>
-
-            <button type="submit">Sort</button>
-        </form>
-    </div>
 
     <main>
         <!-- Vehicles Table -->
@@ -319,7 +310,7 @@ $isAdmin = ($_SESSION['role'] === 'admin');
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="6">No vehicles found.</td>
+                    <td colspan="6">No vehicles found matching your search.</td>
                 </tr>
             <?php endif; ?>
             </tbody>
@@ -328,29 +319,42 @@ $isAdmin = ($_SESSION['role'] === 'admin');
         <!-- Pagination Links -->
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=<?= $page - 1; ?>">Previous</a>
+                <a href="?page=<?= $page - 1; ?>&search=<?= htmlspecialchars($searchTerm); ?>">Previous</a>
             <?php else: ?>
                 <a class="disabled">Previous</a>
             <?php endif; ?>
 
             <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                <a href="?page=<?= $i; ?>" class="<?= ($i == $page) ? 'disabled' : ''; ?>">
+                <a href="?page=<?= $i; ?>&search=<?= htmlspecialchars($searchTerm); ?>" class="<?= ($i == $page) ? 'disabled' : ''; ?>">
                     <?= $i; ?>
                 </a>
             <?php endfor; ?>
 
             <?php if ($page < $totalPages): ?>
-                <a href="?page=<?= $page + 1; ?>">Next</a>
+                <a href="?page=<?= $page + 1; ?>&search=<?= htmlspecialchars($searchTerm); ?>">Next</a>
             <?php else: ?>
                 <a class="disabled">Next</a>
             <?php endif; ?>
         </div>
 
-        <!-- Go to Dashboard button -->
+        <!-- Back to Dashboard button -->
         <a href="<?= $isAdmin ? 'admin.php' : 'index.php'; ?>">Back to Dashboard</a>
     </main>
-
-    <!-- Add footer here -->
-
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

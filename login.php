@@ -43,17 +43,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f0f4f8;
-            margin: 0;
-            padding: 0;
+            background-image: url('background.jpg'); /* Replace with your image path */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            margin: 0;
         }
+
+        
         
         form {
-            background-color: #ffffff;
+            background-color: black;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
             padding: 20px;
@@ -63,13 +67,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         h2 {
             text-align: center;
-            color: #333333;
+            color: white;
             margin-bottom: 20px;
         }
 
         label {
             font-size: 14px;
-            color: #555555;
+            color: white;
             margin-bottom: 5px;
             display: block;
         }
@@ -85,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         button {
-            background-color: #4CAF50;
+            background-color: #6082B6;
             color: white;
             border: none;
             padding: 10px;
@@ -97,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         button:hover {
-            background-color: #45a049;
+            background-color: #848884;
         }
 
         p {
@@ -106,13 +110,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             font-size: 14px;
         }
         .footer {
+            
             text-align: center;
             margin-top: 15px;
         }
 
+        .footer p{
+            color: white;
+        }
+
         .footer a {
-            color: #4CAF50;
+            color: red;
             text-decoration: none;
+            font-size: large;
         }
 
         .footer a:hover {

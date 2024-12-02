@@ -17,6 +17,8 @@ if (!$vehicle) {
 }
 
 
+
+
 // Validate the VehicleID and fetch details, including image path
 
 
@@ -76,6 +78,11 @@ if (isset($_GET['captcha_image']) && $_GET['captcha_image'] == 'true') {
     imagedestroy($image);
     exit;
 }
+
+// Check user role
+$isUser = ($_SESSION['role'] === 'user');
+$isAdmin = ($_SESSION['role'] === 'admin');
+
 ?>
 
 <!DOCTYPE html>
@@ -310,7 +317,8 @@ if (isset($_GET['captcha_image']) && $_GET['captcha_image'] == 'true') {
             </form>
         </div>
 
-        <a class="back-link" href="index.php">Back to Dashboard</a>
+        <a href="<?= $isAdmin ? 'admin.php' : 'index.php'; ?>">Back to Dashboard</a>
+    </main>
     </div>
 </body>
 </html>
