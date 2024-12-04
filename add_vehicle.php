@@ -320,6 +320,12 @@ function resizeImage($sourcePath, $destPath, $width, $height) {
             font-size: 16px;
             margin-bottom: 20px;
         }
+        .required {
+    color: red; /* Sets the color of the * symbol to red */
+    font-weight: bold; /* Makes the * bold */
+    margin-left: 5px; /* Adds a little space between the label and * */
+}
+
     </style>
 </head>
 <body>
@@ -368,27 +374,27 @@ function resizeImage($sourcePath, $destPath, $width, $height) {
 
         <!-- Form for adding vehicles -->
         <form method="POST" class="vehicle-form" enctype="multipart/form-data">
-            <label for="manufacturer">Manufacturer:</label>
-            <input type="text" name="manufacturer" id="manufacturer" required>
-            
-            <label for="model">Model:</label>
-            <input type="text" name="model" id="model" required>
-            
-            <label for="year">Year:</label>
-            <input type="number" name="year" id="year" required>
-            
-            <label for="price">Price:</label>
-            <input type="number" step="0.01" name="price" id="price" required>
+    <label for="manufacturer">Manufacturer: <span class="required">*</span></label>
+    <input type="text" name="manufacturer" id="manufacturer" required>
+    
+    <label for="model">Model: <span class="required">*</span></label>
+    <input type="text" name="model" id="model" required>
+    
+    <label for="year">Year: <span class="required">*</span></label>
+    <input type="number" name="year" id="year" required>
+    
+    <label for="price">Price: <span class="required">*</span></label>
+    <input type="number" step="0.01" name="price" id="price" required>
 
-            <label for="specifications">Specifications:</label>
-            <input type="text" name="specifications" id="specifications" required>
+    <label for="specifications">Specifications: <span class="required">*</span></label>
+    <input type="text" name="specifications" id="specifications" required>
 
-            <label for="image">Vehicle Image (optional):</label>
-            <input type="file" name="image" id="image" accept="image/*">
+    <label for="image">Vehicle Image (optional):</label>
+    <input type="file" name="image" id="image" accept="image/*">
+    
+    <button type="submit" class="submit-btn">Add Vehicle</button>
+</form>
 
-            
-            <button type="submit" class="submit-btn">Add Vehicle</button>
-        </form>
 
         <div class="back-link">
             <a href="admin.php">Back to Dashboard</a>

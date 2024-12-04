@@ -277,6 +277,25 @@ $isAdmin = ($_SESSION['role'] === 'admin');
     </nav>
 
     <main>
+        <!-- Sort Form -->
+        <div class="right-corner">
+            <form action="read.php" method="POST">
+                <label for="sort_by">Sort By:</label>
+                <select name="sort_by" id="sort_by">
+                    <option value="Manufacturer" <?= $orderBy === 'Manufacturer' ? 'selected' : ''; ?>>Manufacturer</option>
+                    <option value="Model" <?= $orderBy === 'Model' ? 'selected' : ''; ?>>Model</option>
+                    <option value="Year" <?= $orderBy === 'Year' ? 'selected' : ''; ?>>Year</option>
+                    <option value="Price" <?= $orderBy === 'Price' ? 'selected' : ''; ?>>Price</option>
+                </select>
+                <label for="sort_dir">Order:</label>
+                <select name="sort_dir" id="sort_dir">
+                    <option value="asc" <?= $orderDir === 'ASC' ? 'selected' : ''; ?>>Ascending</option>
+                    <option value="desc" <?= $orderDir === 'DESC' ? 'selected' : ''; ?>>Descending</option>
+                </select>
+                <button type="submit">Sort</button>
+            </form>
+        </div>
+
         <!-- Vehicles Table -->
         <table>
             <thead>
@@ -342,6 +361,7 @@ $isAdmin = ($_SESSION['role'] === 'admin');
     </main>
 </body>
 </html>
+
 
 
 
