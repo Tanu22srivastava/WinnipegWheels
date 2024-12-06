@@ -262,6 +262,9 @@ $isAdmin = ($_SESSION['role'] === 'admin');
     <nav>
         <ul>
             <li><a href="read.php">View All Vehicles</a></li>
+            <?php if ($isAdmin): // Only show update and delete for admins ?>
+                <li><a href="add_vehicle.php">Add Vehicle</a></li>
+                            <?php endif; ?>
             <li><a href="comments.php">Comments</a></li>
             <li><a href="about_us.php">About Us</a></li>
             <li><a href="contact_us.php">Contact Us</a></li>
