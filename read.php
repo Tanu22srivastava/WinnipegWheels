@@ -282,22 +282,24 @@ $isAdmin = ($_SESSION['role'] === 'admin');
     <main>
         <!-- Sort Form -->
         <div class="right-corner">
-            <form action="read.php" method="POST">
-                <label for="sort_by">Sort By:</label>
-                <select name="sort_by" id="sort_by">
-                    <option value="Manufacturer" <?= $orderBy === 'Manufacturer' ? 'selected' : ''; ?>>Manufacturer</option>
-                    <option value="Model" <?= $orderBy === 'Model' ? 'selected' : ''; ?>>Model</option>
-                    <option value="Year" <?= $orderBy === 'Year' ? 'selected' : ''; ?>>Year</option>
-                    <option value="Price" <?= $orderBy === 'Price' ? 'selected' : ''; ?>>Price</option>
-                </select>
-                <label for="sort_dir">Order:</label>
-                <select name="sort_dir" id="sort_dir">
-                    <option value="asc" <?= $orderDir === 'ASC' ? 'selected' : ''; ?>>Ascending</option>
-                    <option value="desc" <?= $orderDir === 'DESC' ? 'selected' : ''; ?>>Descending</option>
-                </select>
-                <button type="submit">Sort</button>
-            </form>
-        </div>
+        <!-- Sorting Form -->
+        <form method="post" action="">
+            <label for="sort_by">Sort by:</label>
+            <select name="sort_by" id="sort_by">
+                <option value="Manufacturer" <?= ($orderBy == 'Manufacturer') ? 'selected' : ''; ?>>Manufacturer</option>
+                <option value="Year" <?= ($orderBy == 'Year') ? 'selected' : ''; ?>>Year</option>
+                <option value="Price" <?= ($orderBy == 'Price') ? 'selected' : ''; ?>>Price</option>
+            </select>
+
+            <label for="sort_dir">Order:</label>
+            <select name="sort_dir" id="sort_dir">
+                <option value="asc" <?= ($orderDir == 'ASC') ? 'selected' : ''; ?>>Ascending</option>
+                <option value="desc" <?= ($orderDir == 'DESC') ? 'selected' : ''; ?>>Descending</option>
+            </select>
+
+            <button type="submit">Sort</button>
+        </form>
+    </div>
 
         <!-- Vehicles Table -->
         <table>
@@ -341,19 +343,19 @@ $isAdmin = ($_SESSION['role'] === 'admin');
         <!-- Pagination Links -->
         <div class="pagination">
             <?php if ($page > 1): ?>
-                <a href="?page=<?= $page - 1; ?>&search=<?= htmlspecialchars($searchTerm); ?>">Previous</a>
+                <a href="?page=<?= $page - 1; ?>">Previous</a>
             <?php else: ?>
                 <a class="disabled">Previous</a>
             <?php endif; ?>
 
             <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                <a href="?page=<?= $i; ?>&search=<?= htmlspecialchars($searchTerm); ?>" class="<?= ($i == $page) ? 'disabled' : ''; ?>">
+                <a href="?page=<?= $i; ?>" class="<?= ($i == $page) ? 'disabled' : ''; ?>">
                     <?= $i; ?>
                 </a>
             <?php endfor; ?>
 
             <?php if ($page < $totalPages): ?>
-                <a href="?page=<?= $page + 1; ?>&search=<?= htmlspecialchars($searchTerm); ?>">Next</a>
+                <a href="?page=<?= $page + 1; ?>">Next</a>
             <?php else: ?>
                 <a class="disabled">Next</a>
             <?php endif; ?>

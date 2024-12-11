@@ -1,5 +1,8 @@
 <?php
+
+session_start(); // Start session
 require 'db.php';
+
 
 // Get the search keyword
 $searchKeyword = isset($_GET['search']) ? $_GET['search'] : '';
@@ -21,6 +24,10 @@ $stmt = $pdo->prepare("
 $stmt->execute(['keyword' => '%' . $searchKeyword . '%']);
 $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Check user role
+$isUser = ($_SESSION['role'] === 'user');
+$isAdmin = ($_SESSION['role'] === 'admin');
+
 ?>
 
 <!DOCTYPE html>
@@ -35,10 +42,14 @@ $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <!-- Navigation Bar -->
     <nav class="navbar">
-        <ul>
-            <li><a href="index.php">Home</a></li>
-            <li><a href="search_results.php">Search</a></li>
-            <li><a href="contact.php">Contact</a></li>
+    <ul>
+            <li><a href="read.php">View All Vehicles</a></li>
+            <?php if ($isAdmin): // Only show update and delete for admins ?>
+                <li><a href="add_vehicle.php">Add Vehicle</a></li>
+                            <?php endif; ?>
+            <li><a href="comments.php">Comments</a></li>
+            <li><a href="about_us.php">About Us</a></li>
+            <li><a href="contact_us.php">Contact Us</a></li>
             <li><a href="logout.php">Logout</a></li>
         </ul>
     </nav>
